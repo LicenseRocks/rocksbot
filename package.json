@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@discordjs/rest": "^0.3.0",
+    "common-tags": "^1.8.2",
     "discord-api-types": "^0.29.0",
     "discord.js": "^13.6.0",
     "dotenv": "^8.2.0",
@@ -19,6 +20,7 @@
     "reflect-metadata": "^0.1.13"
   },
   "devDependencies": {
+    "@types/common-tags": "^1.8.1",
     "@types/ioredis": "^4.28.8",
     "@types/node": "^14.14.2",
     "cross-env": "^7.0.3",

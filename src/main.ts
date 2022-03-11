@@ -9,6 +9,7 @@ import { InfoCommandStrategy } from "@command/strategies";
 import CommandRegistry from "@command/command.registry";
 
 import {
+  GuildCreateEventStrategy,
   InteractionCreateEventStrategy,
   ReadyEventStrategy,
 } from "@event/strategies";
@@ -26,6 +27,7 @@ async function bootstrap(): Promise<void> {
 
   const eventRegistry = new EventRegistry()
     .add(new InteractionCreateEventStrategy(commandRegistry.view()))
+    .add(new GuildCreateEventStrategy())
     .add(Resolver.resolve<ReadyEventStrategy>(ReadyEventStrategy));
 
   bot.addEventRegistry(eventRegistry);
