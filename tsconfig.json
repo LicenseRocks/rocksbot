@@ -1,0 +1,29 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "declaration": false,
+    "noImplicitAny": false,
+    "removeComments": true,
+    "noLib": false,
+    "skipLibCheck": true,
+    "baseUrl": ".",
+    "allowSyntheticDefaultImports": true,
+    "emitDecoratorMetadata": true,
+    "resolveJsonModule": true,
+    "experimentalDecorators": true,
+    "target": "es2017",
+    "sourceMap": true,
+    "allowJs": true,
+    "paths": {
+      "@infrastructure/*": ["./src/infrastructure/*"],
+      "@command/*": ["./src/command/*"],
+      "@event/*": ["./src/event/*"],
+      "@core/*": ["./src/*"]
+    },
+    "outDir": "./dist",
+    "incremental": true,
+    "types": ["@types/node"]
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules"]
+}
