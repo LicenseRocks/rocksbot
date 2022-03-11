@@ -1,7 +1,6 @@
 import { Client, Guild, Message } from "discord.js";
 import { REST as RestClient } from "@discordjs/rest";
 import { Routes } from "discord-api-types/v10";
-import { Redis } from "ioredis";
 
 import { EnvVars } from "@core/env-vars";
 import { Injectable } from "@infrastructure/dependency-injection/injectable";
@@ -13,8 +12,7 @@ import EventRegistry from "@event/event.registry";
 export class Bot {
   constructor(
     private readonly client: Client,
-    private readonly restClient: RestClient,
-    private readonly redis: Redis
+    private readonly restClient: RestClient
   ) {}
 
   private readonly config = {

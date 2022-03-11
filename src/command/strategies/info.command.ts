@@ -1,8 +1,4 @@
-import {
-  ApplicationCommandOptionData,
-  CommandInteraction,
-  MessageEmbed,
-} from "discord.js";
+import { CommandInteraction, MessageEmbed } from "discord.js";
 
 import { SlashCommandBuilder } from "@discordjs/builders";
 
@@ -70,10 +66,13 @@ export class InfoCommandStrategy implements CommandStrategy {
                 )}
               `,
             }
-          ).setFooter(`
+          )
+          .setFooter({
+            text: `
               Account was created at ${member.user.createdAt.toLocaleString()}
               Joined guild at ${member.joinedAt.toLocaleString()} 
-            `),
+            `,
+          }),
       ],
       ephemeral: shouldBeEphemeral,
     });

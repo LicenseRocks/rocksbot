@@ -5,7 +5,6 @@ export default class EventRegistry {
 
   public add(eventStrategy: EventStrategy): EventRegistry {
     this.eventStrategies.push(eventStrategy);
-    console.log(this.eventStrategies);
     return this;
   }
 
