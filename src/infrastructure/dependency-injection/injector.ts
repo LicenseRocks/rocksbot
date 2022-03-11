@@ -1,9 +1,11 @@
 import "reflect-metadata";
+import Redis from "ioredis";
 import { Client, Intents } from "discord.js";
 import { REST as RestClient } from "@discordjs/rest";
 
 import { EnvVars } from "@core/env-vars";
 import { Constructor } from "@infrastructure/dependency-injection/constructor.type";
+import { LegibleRedis } from "@infrastructure/redis/legible-redis";
 
 export class Injector extends Map {
   public resolve<T>(target: Constructor<any>): T {
@@ -30,6 +32,9 @@ export class Injector extends Map {
           })
         : target === RestClient
         ? new RestClient({ version: "10" }).setToken(EnvVars.DISCORD_TOKEN)
+        : //  HACK: This has to be here due to DI inability to detect the dependency dependencies and it has two instances of the same type and DI handles every dependency as singletons.
+        target === LegibleRedis
+        ? new LegibleRedis(new Redis(), new Redis())
         : new target(...injections);
 
     this.set(target, newClassInstance);

@@ -18,7 +18,9 @@ import EventRegistry from "@event/event.registry";
 async function bootstrap(): Promise<void> {
   const bot = Resolver.resolve<Bot>(Bot);
 
-  const commandRegistry = new CommandRegistry().add(new InfoCommandStrategy());
+  const commandRegistry = new CommandRegistry().add(
+    Resolver.resolve<InfoCommandStrategy>(InfoCommandStrategy)
+  );
 
   bot.addCommandRegistry(commandRegistry);
 
