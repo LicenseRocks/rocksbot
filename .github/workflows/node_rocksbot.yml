@@ -3,9 +3,9 @@ on:
   workflow_dispatch:
     inputs:
       environ:
-        description: "Where to deploy: (staging, production)?"
+        description: "Where to deploy: (preview, production)?"
         required: true
-        default: "staging"
+        default: "preview"
 
 jobs:
   build_image:
@@ -31,7 +31,7 @@ jobs:
           echo "ENV_NAME=${{ github.event.inputs.environ }}" >> $GITHUB_ENV
 
       - name: Inputs validate
-        if: ${{ !contains(github.event.inputs.environ, 'staging') && !contains(github.event.inputs.environ, 'production')}}
+        if: ${{ !contains(github.event.inputs.environ, 'preview') && !contains(github.event.inputs.environ, 'production')}}
         shell: bash
         run: |
           exit 1
@@ -77,7 +77,17 @@ jobs:
         shell: bash
         run: |
           mkdir -p ~/.${PROJECT_NAME}-${ENV_NAME}
-          aws --region ${{ env.AWS_REGION }} ssm get-parameter --name "/rocksbot/${{ env.ENV_NAME }}/secrets" --with-decryption --output text --query Parameter.Value > ~/.${PROJECT_NAME}-${ENV_NAME}/.resque_secrets
+          aws --region ${{ env.AWS_REGION }} ssm get-parameter --name "/rocksbot/${{ env.ENV_NAME }}/secrets" --with-decryption --output text --query Parameter.Value > ~/.${PROJECT_NAME}-${ENV_NAME}/.rocksbot_secrets
+
+      - name: Get Project Params
+        run: |
+          mkdir -p ~/.$PROJECT_NAME
+          aws --region ${{ env.AWS_REGION }} ssm get-parameter --name "/rocksbot/${{ env.ENV_NAME }}/envs" --with-decryption --output text --query Parameter.Value > ~/.${PROJECT_NAME}-${ENV_NAME}/.rocksbot_envs
+
+      - name: Get Cluster Namespace Params
+        run: |
+          if [ ${{ env.ENV_NAME }}  = "production" ] ; then echo "NAMESPACE=rocksbot-prod" >> $GITHUB_ENV; else echo "NAMESPACE=rocksbot-prev" >> $GITHUB_ENV; fi
+          if [ ${{ env.ENV_NAME }}  = "production" ] ; then echo "NODE_ENV=production" >> $GITHUB_ENV; else echo "NODE_ENV=development" >> $GITHUB_ENV; fi
 
       - name: Checkout Repo
         uses: actions/checkout@v1
@@ -97,8 +107,8 @@ jobs:
           export DOCKER_BUILDKIT=0
           echo deployment >> .dockerignore
           envsubst < deployment/Dockerfile > deployment/Dockerfile-app
-          docker-compose -f resqueJobs/deployment/docker-compose.yml up -d
-          docker-compose -f resqueJobs/deployment/docker-compose.yml build
+          docker-compose -f deployment/docker-compose.yml up -d
+          docker-compose -f deployment/docker-compose.yml build
 
       - name: Push base containers to DCR
         id: push
@@ -106,29 +116,33 @@ jobs:
           $(aws ecr get-login --no-include-email --region $AWS_REGION)
           docker-compose -f deployment/docker-compose.yml push
 
-      # - name: Deploy (feature branch) 🚀
-      #   id: deploy
-      #   env:
-      #     ALB_HOSTNAME: ${{ env.PROJECT_DOMAIN }}
-      #     ALB_GROUP: ${{ env.ALB_GROUP }}
-      #     ALB_SUBNETS: ${{ env.ALB_SUBNETS }}
-      #     PROD_DATABASE_URL: ${{ env.PROD_DATABASE_URL}}
+      - name: Deploy (feature branch) 🚀
+        id: deploy
+        env:
+          ALB_HOSTNAME: ${{ env.PROJECT_DOMAIN }}
+          ALB_GROUP: ${{ env.ALB_GROUP }}
+          ALB_SUBNETS: ${{ env.ALB_SUBNETS }}
+          PROD_DATABASE_URL: ${{ env.PROD_DATABASE_URL}}
 
-      #   if: env.CD == 1
-      #   run: |
-      #     echo "create namespace"
-      #     kubectl create ns resque || true
+        if: env.CD == 1
+        run: |
+          echo "create namespace"
+          kubectl create ns $NAMESPACE || true
 
-      #     echo "setting env variables"
-      #     envsubst < resqueJobs/deployment/resque.yaml > resqueJobs/deployment/resque.yml
-      #     mv -f resqueJobs/deployment/resque.yml resqueJobs/deployment/resque.yaml
+          echo "setting env variables"
+          envsubst < deployment/rocksbot.yaml > deployment/rocksbot.yml
+          mv -f deployment/rocksbot.yml deployment/rocksbot.yaml
 
-      #     echo "app secrets"
-      #     cp ~/.${PROJECT_NAME}-${ENV_NAME}/.resque_secrets .resque_secret
-      #     kubectl create secret generic resque-secrets-${ENV_NAME} --from-env-file=.resque_secret -n resque --dry-run=client -o yaml | kubectl apply -f -
+          echo "app configmap"
+           cp ~/.${PROJECT_NAME}-${ENV_NAME}/.rocksbot_envs .rocksbot_envs
+          kubectl create configmap rocksbot-envs-${ENV_NAME} --from-env-file=.rocksbot_envs -n $NAMESPACE --dry-run=client -o yaml | kubectl apply -f -
+
+          echo "app secrets"
+          cp ~/.${PROJECT_NAME}-${ENV_NAME}/.rocksbot_secrets .rocksbot_secret
+          kubectl create secret generic rocksbot-secrets-${ENV_NAME} --from-env-file=.rocksbot_secret -n $NAMESPACE --dry-run=client -o yaml | kubectl apply -f -
           
-      #     echo "app deployment"
-      #     cat resqueJobs/deployment/resque.yaml | kubectl apply -f -
+          echo "app deployment"
+          cat deployment/rocksbot.yaml | kubectl apply -f -
 
       - name: Cleanup
         if: always()

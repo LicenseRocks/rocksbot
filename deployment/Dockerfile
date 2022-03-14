@@ -2,9 +2,10 @@ FROM node:14.17-alpine AS builder
 ENV NEXT_TELEMETRY_DISABLED 1
 RUN apk add --no-cache libc6-compat git python py-pip make g++
 WORKDIR /app
-COPY * ./
+COPY . ./
+RUN npm install typescript -g
+RUN npm install @types/node --save-dev
 RUN npm run build
-RUN ls -la
 
 FROM node:14.17-alpine AS runner
 ENV NEXT_TELEMETRY_DISABLED 1
@@ -17,9 +18,9 @@ RUN adduser -S nodejs -u 1002
 
 COPY --from=builder /app/*config* ./
 COPY --from=builder /app/*.json ./
-COPY --from=builder /app/public ./public
+COPY --from=builder /app/src ./src
+COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/package.json ./package.json
 
 USER nodejs
-CMD ["npm", "run", "start:prod"]
+CMD ["npm", "run", "start"]
