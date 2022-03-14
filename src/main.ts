@@ -5,7 +5,10 @@ import { Resolver } from "@infrastructure/dependency-injection/injector";
 
 import { Bot } from "@core/bot";
 
-import { InfoCommandStrategy } from "@command/strategies";
+import {
+  InfoCommandStrategy,
+  VerifyCommandStrategy,
+} from "@command/strategies";
 import CommandRegistry from "@command/command.registry";
 
 import {
@@ -19,9 +22,9 @@ import EventRegistry from "@event/event.registry";
 async function bootstrap(): Promise<void> {
   const bot = Resolver.resolve<Bot>(Bot);
 
-  const commandRegistry = new CommandRegistry().add(
-    Resolver.resolve<InfoCommandStrategy>(InfoCommandStrategy)
-  );
+  const commandRegistry = new CommandRegistry()
+    .add(Resolver.resolve<InfoCommandStrategy>(InfoCommandStrategy))
+    .add(new VerifyCommandStrategy());
 
   bot.addCommandRegistry(commandRegistry);
 
