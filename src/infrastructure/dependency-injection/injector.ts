@@ -42,7 +42,14 @@ export class Injector extends Map {
         ? new RestClient({ version: "10" }).setToken(EnvVars.DISCORD_TOKEN)
         : //  HACK: This has to be here due to DI inability to detect the dependency dependencies and it has two instances of the same type and DI handles every dependency as singletons.
         target === LegibleRedis
-        ? new LegibleRedis(new Redis())
+        ? new LegibleRedis(
+            //  FIXME: ioredis types are probably outdated because the constructor does not accept options object
+            new Redis({
+              port: EnvVars.REDIS_PORT,
+              host: EnvVars.REDIS_HOST,
+              db: EnvVars.REDIS_DB_NO,
+            } as any)
+          )
         : manualInjections
         ? new target(...manualInjections, ...injections)
         : new target(...injections);
