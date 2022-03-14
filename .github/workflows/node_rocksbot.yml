@@ -1,0 +1,155 @@
+name: Build rocksbot
+on:
+  workflow_dispatch:
+    inputs:
+      environ:
+        description: "Where to deploy: (preview, production)?"
+        required: true
+        default: "preview"
+
+jobs:
+  build_image:
+    name: Build rocksbot and Deploy
+    runs-on: ubuntu-18.04
+    steps:
+      - name: Set BRANCH
+        shell: bash
+        run: |
+          echo "BRANCH=$(echo ${GITHUB_REF##*/})" >> $GITHUB_ENV
+          echo "PROJECT_NAME=rocksbot" >> $GITHUB_ENV
+
+      - name: Cluster specific envs
+        shell: bash
+        run: |
+          echo "CLUSTER=prod_1" >> $GITHUB_ENV
+          echo "CLUSTER_LONG_NAME=prod_1-creators-hub" >> $GITHUB_ENV
+          echo "CD=1" >> $GITHUB_ENV
+
+      - name: Inputs
+        shell: bash
+        run: |
+          echo "ENV_NAME=${{ github.event.inputs.environ }}" >> $GITHUB_ENV
+
+      - name: Inputs validate
+        if: ${{ !contains(github.event.inputs.environ, 'preview') && !contains(github.event.inputs.environ, 'production')}}
+        shell: bash
+        run: |
+          exit 1
+
+      - name: Cluster specific envs
+        shell: bash
+        run: |
+          case $CLUSTER in
+            prod_1)
+              echo "DCR_HOST=245763787462.dkr.ecr.eu-central-1.amazonaws.com" >> $GITHUB_ENV
+              echo "DCR_PATH=rocksbot" >> $GITHUB_ENV
+              echo "AWS_PROFILE=lr_prod_1_ci" >> $GITHUB_ENV
+              ;;
+          esac
+
+      - name: Cluster specific AWS creds
+        shell: bash
+        run: |
+          echo "AWS_ACCESS_KEY_ID=${{ secrets[format('{0}_AWS_ACCESS_KEY_ID', env.CLUSTER)] }}" >> $GITHUB_ENV
+          echo "AWS_SECRET_ACCESS_KEY=${{ secrets[format('{0}_AWS_SECRET_ACCESS_KEY', env.CLUSTER)] }}" >> $GITHUB_ENV
+          echo "AWS_REGION=eu-central-1" >> $GITHUB_ENV
+          echo "GITHUB_MESSAGE=$(git log -1 --pretty=format:'%s')" >> $GITHUB_ENV
+
+      - name: Create AWS & Kube Profile
+        run: |
+          mkdir -p ~/.aws
+
+          cat << EoF >> ~/.aws/config
+          [${AWS_PROFILE}]
+          region = ${AWS_REGION}
+          EoF
+
+          cat << EoF >> ~/.aws/credentials
+          [${AWS_PROFILE}]
+          aws_access_key_id=${AWS_ACCESS_KEY_ID}
+          aws_secret_access_key=${AWS_SECRET_ACCESS_KEY}
+          EoF
+
+          mkdir -p ~/.kube && echo "${{ secrets[format('{0}_KUBE_CONFIG_CONTENT', env.CLUSTER)] }}" | base64 -d > ~/.kube/config
+          chmod 600 ~/.kube/config
+
+      - name: Environment specific envs
+        shell: bash
+        run: |
+          mkdir -p ~/.${PROJECT_NAME}-${ENV_NAME}
+          aws --region ${{ env.AWS_REGION }} ssm get-parameter --name "/rocksbot/${{ env.ENV_NAME }}/secrets" --with-decryption --output text --query Parameter.Value > ~/.${PROJECT_NAME}-${ENV_NAME}/.rocksbot_secrets
+
+      - name: Get Project Params
+        run: |
+          mkdir -p ~/.$PROJECT_NAME
+          aws --region ${{ env.AWS_REGION }} ssm get-parameter --name "/rocksbot/${{ env.ENV_NAME }}/envs" --with-decryption --output text --query Parameter.Value > ~/.${PROJECT_NAME}-${ENV_NAME}/.rocksbot_envs
+
+      - name: Get Cluster Namespace Params
+        run: |
+          if [ ${{ env.ENV_NAME }}  = "production" ] ; then echo "NAMESPACE=rocksbot-prod" >> $GITHUB_ENV; else echo "NAMESPACE=rocksbot-prev" >> $GITHUB_ENV; fi
+          if [ ${{ env.ENV_NAME }}  = "production" ] ; then echo "NODE_ENV=production" >> $GITHUB_ENV; else echo "NODE_ENV=development" >> $GITHUB_ENV; fi
+
+      - name: Checkout Repo
+        uses: actions/checkout@v1
+        with:
+          path: ${{ env.PROJECT_NAME }}-${{ env.ENV_NAME }}
+
+      - name: Build Containers - Docker Compose
+        env:
+          DCR_HOST: ${{ env.DCR_HOST }}
+          DCR_PATH: ${{ env.DCR_PATH }}
+          BRANCH: ${{ env.BRANCH }}
+          AWS_PROFILE: ${{ env.AWS_PROFILE }}
+          AWS_ACCESS_KEY_ID: ${{ env.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ env.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: ${{ env.AWS_REGION }}
+        run: |
+          export DOCKER_BUILDKIT=0
+          echo deployment >> .dockerignore
+          envsubst < deployment/Dockerfile > deployment/Dockerfile-app
+          docker-compose -f deployment/docker-compose.yml up -d
+          docker-compose -f deployment/docker-compose.yml build
+
+      - name: Push base containers to DCR
+        id: push
+        run: |
+          $(aws ecr get-login --no-include-email --region $AWS_REGION)
+          docker-compose -f deployment/docker-compose.yml push
+
+      - name: Deploy (feature branch) 🚀
+        id: deploy
+        env:
+          ALB_HOSTNAME: ${{ env.PROJECT_DOMAIN }}
+          ALB_GROUP: ${{ env.ALB_GROUP }}
+          ALB_SUBNETS: ${{ env.ALB_SUBNETS }}
+          PROD_DATABASE_URL: ${{ env.PROD_DATABASE_URL}}
+
+        if: env.CD == 1
+        run: |
+          echo "create namespace"
+          kubectl create ns $NAMESPACE || true
+
+          echo "setting env variables"
+          envsubst < deployment/rocksbot.yaml > deployment/rocksbot.yml
+          mv -f deployment/rocksbot.yml deployment/rocksbot.yaml
+
+          echo "app configmap"
+           cp ~/.${PROJECT_NAME}-${ENV_NAME}/.rocksbot_envs .rocksbot_envs
+          kubectl create configmap rocksbot-envs-${ENV_NAME} --from-env-file=.rocksbot_envs -n $NAMESPACE --dry-run=client -o yaml | kubectl apply -f -
+
+          echo "app secrets"
+          cp ~/.${PROJECT_NAME}-${ENV_NAME}/.rocksbot_secrets .rocksbot_secret
+          kubectl create secret generic rocksbot-secrets-${ENV_NAME} --from-env-file=.rocksbot_secret -n $NAMESPACE --dry-run=client -o yaml | kubectl apply -f -
+          
+          echo "app deployment"
+          cat deployment/rocksbot.yaml | kubectl apply -f -
+
+      - name: Cleanup
+        if: always()
+        run: |
+          rm -f .env_secret
+          rm -f ~/.aws/config
+          rm -f ~/.aws/credentials
+          rm -f ~/.kube/config
+          docker-compose -f deployment/docker-compose.yml down --remove-orphans
+          rm -fr ~/.${PROJECT_NAME}-${ENV_NAME}
