@@ -8,9 +8,17 @@ import { Constructor } from "@infrastructure/dependency-injection/constructor.ty
 import { LegibleRedis } from "@infrastructure/redis/legible-redis";
 
 export class Injector extends Map {
-  public resolve<T>(target: Constructor<any>): T {
+  public resolve<T>(
+    target: Constructor<any>,
+    manualInjections?: Array<any>
+  ): T {
     const tokens = Reflect.getMetadata("design:paramtypes", target) || [];
-    const injections = tokens.map((token: Constructor<any>) =>
+
+    const validTokens = manualInjections
+      ? tokens.slice(manualInjections.length)
+      : tokens;
+
+    const injections = validTokens.map((token: Constructor<any>) =>
       this.resolve<any>(token)
     );
 
@@ -34,7 +42,9 @@ export class Injector extends Map {
         ? new RestClient({ version: "10" }).setToken(EnvVars.DISCORD_TOKEN)
         : //  HACK: This has to be here due to DI inability to detect the dependency dependencies and it has two instances of the same type and DI handles every dependency as singletons.
         target === LegibleRedis
-        ? new LegibleRedis(new Redis(), new Redis())
+        ? new LegibleRedis(new Redis())
+        : manualInjections
+        ? new target(...manualInjections, ...injections)
         : new target(...injections);
 
     this.set(target, newClassInstance);

@@ -1,4 +1,4 @@
-import { Client, Guild, Message } from "discord.js";
+import { Client } from "discord.js";
 import { REST as RestClient } from "@discordjs/rest";
 import { Routes } from "discord-api-types/v10";
 
@@ -7,12 +7,17 @@ import { Injectable } from "@infrastructure/dependency-injection/injectable";
 
 import CommandRegistry from "@command/command.registry";
 import EventRegistry from "@event/event.registry";
+import {
+  LegibleRedis,
+  NftPurchaseRewardPayload,
+} from "@infrastructure/redis/legible-redis";
 
 @Injectable()
 export class Bot {
   constructor(
     private readonly client: Client,
-    private readonly restClient: RestClient
+    private readonly restClient: RestClient,
+    private readonly legibleRedis: LegibleRedis
   ) {}
 
   private readonly config = {
@@ -42,10 +47,19 @@ export class Bot {
     this.applyEventRegistry();
     await this.listen();
     await this.applyCommandRegistry();
+    await this.handleCommunication();
   }
 
   private async listen(): Promise<void> {
     await this.client.login(this.config.token);
+  }
+
+  private async handleCommunication() {
+    await this.legibleRedis.sub<NftPurchaseRewardPayload>(
+      async ({ type, payload }) => {
+        console.log("nft reward");
+      }
+    );
   }
 
   private applyEventRegistry(): void {

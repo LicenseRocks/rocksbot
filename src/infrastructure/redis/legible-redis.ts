@@ -1,46 +1,44 @@
+import type { Snowflake } from "discord.js";
 import type { LiteralUnion } from "type-fest";
 import { Redis } from "ioredis";
 
 import { Injectable } from "@infrastructure/dependency-injection/injectable";
 
-const MESSAGE_CHANNELS = ["BOT_CHANNEL", "CREATORS_HUB_CHANNEL"] as const;
+const MESSAGE_CHANNELS = ["CREATORS_HUB_CHANNEL"] as const;
 type LegibleRedisMessageChannel = typeof MESSAGE_CHANNELS[number];
 
-//  TODO: There will be more of these types
-type LegibleRedisMessageType = "guild_join";
+type LegibleRedisMessageType = "nft_purchase_reward";
 
-type LegibleRedisMessage = {
+type LegibleRedisMessage<T = any> = {
   type: LiteralUnion<LegibleRedisMessageType, string>;
-  payload: object;
+  payload: T;
+};
+
+export type NftPurchaseRewardPayload = {
+  guildId: Snowflake;
+  roleId: Snowflake;
+  destinationUserId: Snowflake;
 };
 
 @Injectable()
 export class LegibleRedis {
-  constructor(
-    private readonly pubClient: Redis,
-    private readonly subClient: Redis
-  ) {}
+  private readonly defaultChannel: LegibleRedisMessageChannel =
+    "CREATORS_HUB_CHANNEL";
 
-  public async pub(
-    channel: LegibleRedisMessageChannel,
-    message: LegibleRedisMessage
-  ) {
-    return await this.pubClient.publish(channel, JSON.stringify(message));
-  }
+  constructor(private readonly client: Redis) {}
 
-  public async sub(
-    channel: LegibleRedisMessageChannel,
-    handler: (message: LegibleRedisMessage) => void
+  public async sub<T>(
+    handler: (message: LegibleRedisMessage) => Promise<void>
   ) {
-    this.subClient.subscribe(channel);
-    this.subClient.on("message", (incomingChannel, message) => {
-      if (incomingChannel === channel) {
-        handler(JSON.parse(message) as LegibleRedisMessage);
+    await this.client.subscribe("CREATORS_HUB_CHANNEL");
+    this.client.on("message", async (incomingChannel, message) => {
+      if (incomingChannel === this.defaultChannel) {
+        await handler(JSON.parse(message) as LegibleRedisMessage);
       }
     });
   }
 
-  public async unsub(channel: LegibleRedisMessageChannel) {
-    await this.subClient.unsubscribe(channel);
+  public async unsub() {
+    await this.client.unsubscribe(this.defaultChannel);
   }
 }
