@@ -6,9 +6,8 @@ Manual injections (if any) should be first in the constructor, then the auto ded
 
 ### Run in development mode
 
-`npm run start:dev`
-_(production mode soon)_
+`npm run dev`
 
 ### Run in production mode
 
-`npm run build && npm run start:prod`
+`npm run build && npm run start`
