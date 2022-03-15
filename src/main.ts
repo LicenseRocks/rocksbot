@@ -2,12 +2,13 @@ require("dotenv").config();
 import "reflect-metadata";
 
 import { Resolver } from "@infrastructure/dependency-injection/injector";
-
+import { EnvVars } from "@core/env-vars";
 import { Bot } from "@core/bot";
 
 import {
   InfoCommandStrategy,
   VerifyCommandStrategy,
+  EmitCommandStrategy,
 } from "@command/strategies";
 import CommandRegistry from "@command/command.registry";
 
@@ -16,7 +17,6 @@ import {
   InteractionCreateEventStrategy,
   ReadyEventStrategy,
 } from "@event/strategies";
-
 import EventRegistry from "@event/event.registry";
 
 async function bootstrap(): Promise<void> {
@@ -25,6 +25,12 @@ async function bootstrap(): Promise<void> {
   const commandRegistry = new CommandRegistry()
     .add(Resolver.resolve<InfoCommandStrategy>(InfoCommandStrategy))
     .add(new VerifyCommandStrategy());
+
+  if (EnvVars.MODE === "development") {
+    commandRegistry.add(
+      Resolver.resolve<EmitCommandStrategy>(EmitCommandStrategy)
+    );
+  }
 
   bot.addCommandRegistry(commandRegistry);
 
