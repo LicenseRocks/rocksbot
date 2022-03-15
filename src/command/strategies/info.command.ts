@@ -16,14 +16,16 @@ export class InfoCommandStrategy implements CommandStrategy {
     );
 
   async execute(interaction: CommandInteraction): Promise<any> {
-    const { guild, options } = interaction;
-    const optionalMentionUser = options.get("mention-user");
-    const userId = optionalMentionUser
-      ? optionalMentionUser.value
-      : interaction.user.id;
+    const {
+      guild,
+      options,
+      user: { id: authorUserId },
+    } = interaction;
+    const optionalMentionUser = options.getUser("mention-user");
+    const userId = optionalMentionUser ?? authorUserId;
     const shouldBeEphemeral = !!!optionalMentionUser;
 
-    const member = await guild.members.fetch(userId as string);
+    const member = await guild.members.fetch(userId);
 
     await interaction.reply({
       embeds: [

@@ -25,8 +25,8 @@ export class VerifyCommandStrategy implements CommandStrategy {
   async execute(interaction: CommandInteraction): Promise<any> {
     const { guild, options } = interaction;
     const [providedUrl, providedSecret] = [
-      options.get("creators-hub-url"),
-      options.get("creators-hub-secret"),
+      options.getString("creators-hub-url"),
+      options.getString("creators-hub-secret"),
     ];
 
     await interaction.deferReply({ ephemeral: true });
@@ -42,7 +42,7 @@ export class VerifyCommandStrategy implements CommandStrategy {
         headers: {
           secret: providedSecret,
         },
-      } as any);
+      });
 
       await interaction.editReply({
         embeds: [
