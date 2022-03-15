@@ -43,18 +43,17 @@ export class VerifyCommandStrategy implements CommandStrategy {
         },
       } as any);
 
-      await interaction.reply({
+      await interaction.editReply({
         embeds: [new MessageEmbed().setColor(0x2f3136).setDescription("works")],
-        ephemeral: true,
       });
     } catch (error) {
-      await interaction.reply({
+      await interaction.editReply({
         embeds: [
           new MessageEmbed()
-            .setColor(0x2f3136)
-            .setDescription(`something went wrong: ${JSON.stringify(error)}`),
+            .setColor(0xfc427b)
+            .setTitle("Something went wrong.")
+            .setDescription(JSON.stringify(error)),
         ],
-        ephemeral: true,
       });
     }
   }
