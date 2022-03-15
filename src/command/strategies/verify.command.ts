@@ -48,7 +48,9 @@ export class VerifyCommandStrategy implements CommandStrategy {
         url: `${this.autolink(providedUrl)}/api/webhooks/discord`,
         data: {
           type: "server_verification",
-          guildId: guild.id,
+          payload: {
+            guildId: guild.id,
+          },
         },
         headers: {
           secret: providedSecret,
