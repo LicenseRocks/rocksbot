@@ -1,6 +1,7 @@
 import axios from "axios";
 import { CommandInteraction, MessageEmbed } from "discord.js";
 import { SlashCommandBuilder } from "@discordjs/builders";
+import isURL from "validator/lib/isURL";
 
 import { CommandStrategy } from "@command/command.strategy";
 import { MessageFormat } from "@infrastructure/helpers/message-format";
@@ -29,12 +30,22 @@ export class VerifyCommandStrategy implements CommandStrategy {
       options.getString("creators-hub-secret"),
     ];
 
+    if (!isURL(this.autolink(providedUrl))) {
+      await interaction.reply({
+        content: `Provided ${MessageFormat.code(
+          "creators-hub-url"
+        )} is invalid.`,
+        ephemeral: true,
+      });
+      return;
+    }
+
     await interaction.deferReply({ ephemeral: true });
 
     try {
       await axios({
         method: "POST",
-        url: `${providedUrl}/api/discord/webhook`,
+        url: `${this.autolink(providedUrl)}/api/discord/webhook`,
         data: {
           type: "server_verification",
           guildId: guild.id,
@@ -66,5 +77,13 @@ export class VerifyCommandStrategy implements CommandStrategy {
         ],
       });
     }
+  }
+
+  private autolink(input: string) {
+    return !input.startsWith("https://") && !input.startsWith("http://")
+      ? `https://${input}`
+      : input.startsWith("http://")
+      ? input.replace("http://", "https://")
+      : input;
   }
 }
