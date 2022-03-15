@@ -28,7 +28,7 @@ export class InfoCommandStrategy implements CommandStrategy {
     await interaction.reply({
       embeds: [
         new MessageEmbed()
-          .setColor(0x2f3136)
+          .setColor(MessageFormat.color.neutralGray)
           .setAuthor({
             name: `${member.user.tag} ${member.user.bot ? "🤖" : ""}`,
             iconURL: `${

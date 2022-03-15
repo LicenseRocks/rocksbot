@@ -15,7 +15,7 @@ export class GuildCreateEventStrategy implements EventStrategy {
     await guildOwnerDirectChannel.send({
       embeds: [
         new MessageEmbed()
-          .setColor(0x2f3136)
+          .setColor(MessageFormat.color.neutralGray)
           .setTitle(welcomeMessages.en.title)
           .setDescription(welcomeMessages.en.description)
           .addFields(welcomeMessages.en.fields)

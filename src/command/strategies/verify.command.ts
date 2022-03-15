@@ -3,6 +3,7 @@ import { CommandInteraction, MessageEmbed } from "discord.js";
 import { SlashCommandBuilder } from "@discordjs/builders";
 
 import { CommandStrategy } from "@command/command.strategy";
+import { MessageFormat } from "@infrastructure/helpers/message-format";
 
 export class VerifyCommandStrategy implements CommandStrategy {
   metadata = new SlashCommandBuilder()
@@ -44,15 +45,24 @@ export class VerifyCommandStrategy implements CommandStrategy {
       } as any);
 
       await interaction.editReply({
-        embeds: [new MessageEmbed().setColor(0x2f3136).setDescription("works")],
+        embeds: [
+          new MessageEmbed()
+            .setColor(MessageFormat.color.neutralGray)
+            .setDescription("works"),
+        ],
       });
     } catch (error) {
       await interaction.editReply({
         embeds: [
           new MessageEmbed()
-            .setColor(0xfc427b)
+            .setColor(MessageFormat.color.errorRed)
             .setTitle("Something went wrong.")
-            .setDescription(JSON.stringify(error)),
+            .setDescription(
+              MessageFormat.codeMultiline(
+                JSON.stringify(error, null, 2),
+                "json"
+              )
+            ),
         ],
       });
     }
