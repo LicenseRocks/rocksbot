@@ -18,6 +18,7 @@
       "@infrastructure/*": ["./src/infrastructure/*"],
       "@command/*": ["./src/command/*"],
       "@event/*": ["./src/event/*"],
+      "@tools/*": ["./src/tools/*"],
       "@core/*": ["./src/*"]
     },
     "outDir": "./dist",
