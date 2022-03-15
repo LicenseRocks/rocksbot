@@ -1,4 +1,4 @@
-FROM node:14.17-alpine AS builder
+FROM node:17.7-alpine AS builder
 ENV NEXT_TELEMETRY_DISABLED 1
 RUN apk add --no-cache libc6-compat git python py-pip make g++
 WORKDIR /app
@@ -7,7 +7,7 @@ RUN npm install typescript -g
 RUN npm install @types/node --save-dev
 RUN npm run build
 
-FROM node:14.17-alpine AS runner
+FROM node:17.7-alpine AS runner
 ENV NEXT_TELEMETRY_DISABLED 1
 ARG NODE_ENV
 ENV NODE_ENV $NODE_ENV
