@@ -44,6 +44,7 @@ jobs:
               echo "DCR_HOST=245763787462.dkr.ecr.eu-central-1.amazonaws.com" >> $GITHUB_ENV
               echo "DCR_PATH=rocksbot" >> $GITHUB_ENV
               echo "AWS_PROFILE=lr_prod_1_ci" >> $GITHUB_ENV
+              echo "TIMESTAMP=$(date +'%d-%m-%Y_%H-%M-%S')" >> $GITHUB_ENV
               ;;
           esac
 
@@ -124,10 +125,12 @@ jobs:
           ALB_HOSTNAME: ${{ env.PROJECT_DOMAIN }}
           ALB_GROUP: ${{ env.ALB_GROUP }}
           ALB_SUBNETS: ${{ env.ALB_SUBNETS }}
-          PROD_DATABASE_URL: ${{ env.PROD_DATABASE_URL}}
+          PROD_DATABASE_URL: ${{ env.PROD_DATABASE_URL }}
+          TIMESTAMP: ${{ env.TIMESTAMP }}
 
         if: env.CD == 1
         run: |
+          
           echo "create namespace"
           kubectl create ns $NAMESPACE || true
 
@@ -144,6 +147,7 @@ jobs:
           kubectl create secret generic rocksbot-secrets-${ENV_NAME} --from-env-file=.rocksbot_secret -n $NAMESPACE --dry-run=client -o yaml | kubectl apply -f -
           
           echo "app deployment"
+          cat deployment/rocksbot.yaml | kubectl delete -f -
           cat deployment/rocksbot.yaml | kubectl apply -f -
 
       - name: Cleanup

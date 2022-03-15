@@ -4,6 +4,7 @@ RUN apk add --no-cache libc6-compat git make g++
 WORKDIR /app
 COPY . ./
 RUN npm install typescript -g
+RUN npm install @types/node --save-dev
 RUN npm run build
 
 FROM node:17.7-alpine AS runner
