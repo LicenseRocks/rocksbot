@@ -1,0 +1,10 @@
+version: '3.4'
+services:
+  backend:
+    image: "${DCR_HOST}/${DCR_PATH}/backend:${ENV_NAME}"
+    build:
+        dockerfile: deployment/Dockerfile-app
+        context: ..
+        args:
+            - NODE_ENV
+    restart: unless-stopped
