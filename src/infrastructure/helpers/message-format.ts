@@ -2,6 +2,7 @@ export class MessageFormat {
   public static readonly color = Object.freeze({
     errorRed: 0xfc427b,
     neutralGray: 0x2f3136,
+    warningYellow: 0xeab543,
   });
 
   public static user(id: string): string {
