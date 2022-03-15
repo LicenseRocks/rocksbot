@@ -35,6 +35,9 @@ export class ChannelLogs {
     const logsChannel = this.getLogsChannel();
 
     if (isNil(logsChannel) || !logsChannel.isText()) {
+      console.warn(
+        `Could not find #rocksbot-logs channel on ${this.guild.name} Discord. Skipping logging process.`
+      );
       return;
     }
 

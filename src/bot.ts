@@ -1,16 +1,20 @@
-import { Client } from "discord.js";
+import { Client, Role, GuildMember } from "discord.js";
 import { REST as RestClient } from "@discordjs/rest";
 import { Routes } from "discord-api-types/v10";
+import { isNil } from "lodash";
 
 import { EnvVars } from "@core/env-vars";
+import { ChannelLogs } from "@tools/channel-logs/channel-logs-manager";
 import { Injectable } from "@infrastructure/dependency-injection/injectable";
-
-import CommandRegistry from "@command/command.registry";
-import EventRegistry from "@event/event.registry";
 import {
   LegibleRedis,
   NftPurchaseRewardPayload,
 } from "@infrastructure/redis/legible-redis";
+import { MessageFormat } from "@infrastructure/helpers/message-format";
+import { retrieveFaulty } from "@infrastructure/helpers/faulty-pair";
+
+import CommandRegistry from "@command/command.registry";
+import EventRegistry from "@event/event.registry";
 
 @Injectable()
 export class Bot {
@@ -56,23 +60,74 @@ export class Bot {
 
   private async handleCommunication() {
     await this.legibleRedis.sub<NftPurchaseRewardPayload>(
+      //  TODO: Extract this to separate file
       async ({ type, payload }) => {
         if (type === "nft_purchase_reward") {
           const { guildId, roleId, destinationUserId } = payload;
 
-          try {
-            const guild = await this.client.guilds.fetch(guildId);
-            const role = await guild.roles.fetch(roleId);
-            const member = await guild.members.fetch(destinationUserId);
+          //  TODO: Make it not possible to be undefined, maybe handle guild delete and send it to CreatorsHub via webhook?
+          const guild = await this.client.guilds.fetch(guildId);
+          const logsManager = new ChannelLogs(guild);
 
+          const [role, roleError] = await retrieveFaulty<Role>(
+            guild.roles.fetch(roleId)
+          );
+
+          if (isNil(role) || roleError) {
+            await logsManager.log(
+              `Could not find reward ${MessageFormat.code(
+                roleId
+              )} role on the ${MessageFormat.code(
+                guild.name
+              )}. Aborted reward role assign process.`,
+              "warning"
+            );
+            return;
+          }
+
+          const [member, memberError] = await retrieveFaulty<GuildMember>(
+            guild.roles.fetch(destinationUserId)
+          );
+
+          if (isNil(member) || memberError) {
+            logsManager.log(
+              `Could not find member (${MessageFormat.user(
+                destinationUserId
+              )}) that would receive reward on the ${MessageFormat.code(
+                guild.name
+              )}. Aborted reward role assign process.`,
+              "warning"
+            );
+            return;
+          }
+
+          try {
             await member.roles.add(role);
-            //  TODO: This should be replaced with notifing the creators hub about errors
-            console.log(
-              `Successfully assigned ${role.name} to ${member.user.tag} on ${guild.name}`
+
+            await logsManager.log(
+              `Successfully assigned ${MessageFormat.role(
+                roleId
+              )} to ${MessageFormat.user(
+                destinationUserId
+              )} on ${MessageFormat.code(guild.name)}`
             );
           } catch (error) {
-            console.log("Role assigning failed.");
-            console.error(error);
+            await logsManager.log(
+              `Could not assign ${MessageFormat.role(
+                roleId
+              )} reward role to ${MessageFormat.user(
+                destinationUserId
+              )} on the ${MessageFormat.code(guild.name)}.`,
+              "error"
+            );
+
+            await logsManager.log(
+              `Stack trace for error above.\n${MessageFormat.codeMultiline(
+                JSON.stringify(error, null, 2),
+                "json"
+              )}`,
+              "error"
+            );
           }
         }
       }
