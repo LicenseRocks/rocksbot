@@ -45,7 +45,7 @@ export class VerifyCommandStrategy implements CommandStrategy {
     try {
       await axios({
         method: "POST",
-        url: `${this.autolink(providedUrl)}/api/discord/webhook`,
+        url: `${this.autolink(providedUrl)}/api/webhooks/discord`,
         data: {
           type: "server_verification",
           guildId: guild.id,
