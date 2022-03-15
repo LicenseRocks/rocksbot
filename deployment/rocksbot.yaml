@@ -9,6 +9,7 @@ kind: Deployment
 metadata:
   labels:
     app.kubernetes.io/name: rocksbot-${ENV_NAME}
+    timestamp: ${TIMESTAMP}
   name: rocksbot-${ENV_NAME}
   namespace: $NAMESPACE
 spec:

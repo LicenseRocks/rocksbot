@@ -23,4 +23,4 @@ COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/node_modules ./node_modules
 
 USER nodejs
-CMD ["npm", "run", "dev"]
+CMD ["npm", "run", "${NODE_NPM}"]
