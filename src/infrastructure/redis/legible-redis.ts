@@ -28,12 +28,12 @@ export class LegibleRedis {
   constructor(private readonly client: Redis) {}
 
   public async sub<T>(
-    handler: (message: LegibleRedisMessage) => Promise<void>
+    handler: (message: LegibleRedisMessage<T>) => Promise<void>
   ) {
     await this.client.subscribe("CREATORS_HUB_CHANNEL");
     this.client.on("message", async (incomingChannel, message) => {
       if (incomingChannel === this.defaultChannel) {
-        await handler(JSON.parse(message) as LegibleRedisMessage);
+        await handler(JSON.parse(message) as LegibleRedisMessage<T>);
       }
     });
   }
