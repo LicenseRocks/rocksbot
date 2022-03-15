@@ -57,7 +57,24 @@ export class Bot {
   private async handleCommunication() {
     await this.legibleRedis.sub<NftPurchaseRewardPayload>(
       async ({ type, payload }) => {
-        console.log("nft reward");
+        if (type === "nft_purchase_reward") {
+          const { guildId, roleId, destinationUserId } = payload;
+
+          try {
+            const guild = await this.client.guilds.fetch(guildId);
+            const role = await guild.roles.fetch(roleId);
+            const member = await guild.members.fetch(destinationUserId);
+
+            await member.roles.add(role);
+            //  TODO: This should be replaced with notifing the creators hub about errors
+            console.log(
+              `Successfully assigned ${role.name} to ${member.user.tag} on ${guild.name}`
+            );
+          } catch (error) {
+            console.log("Role assigning failed.");
+            console.error(error);
+          }
+        }
       }
     );
   }
