@@ -42,11 +42,11 @@ spec:
           protocol: TCP
         resources:
           limits:
-            cpu: 50m
-            memory: 100Mi
+            cpu: 100m
+            memory: 300Mi
           requests:
             cpu: 10m
-            memory: 10Mi
+            memory: 100Mi
       dnsPolicy: ClusterFirst
       imagePullSecrets:
       - name: regcred
