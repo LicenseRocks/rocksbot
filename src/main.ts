@@ -20,8 +20,9 @@ import {
 import EventRegistry from "@event/event.registry";
 
 async function bootstrap(): Promise<void> {
-  const bot = Resolver.resolve<Bot>(Bot);
+  console.log("started application")
 
+  const bot = Resolver.resolve<Bot>(Bot);
   const commandRegistry = new CommandRegistry()
     .add(Resolver.resolve<InfoCommandStrategy>(InfoCommandStrategy))
     .add(new VerifyCommandStrategy());

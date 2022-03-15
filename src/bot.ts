@@ -52,6 +52,7 @@ export class Bot {
 
   private async listen(): Promise<void> {
     await this.client.login(this.config.token);
+    console.log(this.client.ws);
   }
 
   private async handleCommunication() {
