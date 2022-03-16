@@ -86,7 +86,7 @@ export class Bot {
           }
 
           const [member, memberError] = await retrieveFaulty<GuildMember>(
-            guild.roles.fetch(destinationUserId)
+            guild.members.fetch(destinationUserId)
           );
 
           if (isNil(member) || memberError) {
