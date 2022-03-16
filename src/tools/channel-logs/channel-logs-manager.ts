@@ -63,11 +63,6 @@ export class ChannelLogs {
       this.channels = channels;
     }
 
-    console.log(
-      `isNotNil: ${isChannelListFetched}, got ${this.channels.size} channels.`
-    );
-    console.log(this.channels.map(({ id, name }) => ({ id, name })));
-
     return this.channels.find((channel) => channel.name === "rocksbot-logs");
   }
 }
