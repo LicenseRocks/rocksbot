@@ -71,6 +71,9 @@ export class VerifyCommandStrategy implements CommandStrategy {
             roles: roles.map(({ id, name }) => ({ id, name })),
           },
         },
+        headers: {
+          secret: providedSecret,
+        },
       });
 
       await interaction.editReply({

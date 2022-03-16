@@ -15,11 +15,21 @@ export class RefreshCommandStrategy implements CommandStrategy {
         .setName("creators-hub-url")
         .setDescription("Please provide creators hub URL.")
         .setRequired(true)
+    )
+    .addStringOption((option) =>
+      option
+        .setName("creators-hub-secret")
+        .setDescription("Please provide creators hub secret.")
+        .setRequired(true)
     );
 
   async execute(interaction: CommandInteraction): Promise<any> {
     const { guild, options } = interaction;
-    const providedUrl = options.getString("creators-hub-url");
+
+    const [providedUrl, providedSecret] = [
+      options.getString("creators-hub-url"),
+      options.getString("creators-hub-secret"),
+    ];
 
     if (!isURL(this.autolink(providedUrl))) {
       await interaction.reply({
@@ -46,6 +56,9 @@ export class RefreshCommandStrategy implements CommandStrategy {
             guildName: guild.name,
             guildAvatar: guild.iconURL(),
             roles: roles.map(({ id, name }) => ({ id, name })),
+          },
+          headers: {
+            secret: providedSecret,
           },
         },
       });
