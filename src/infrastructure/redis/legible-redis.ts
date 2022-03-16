@@ -7,7 +7,7 @@ import { Injectable } from "@infrastructure/dependency-injection/injectable";
 const MESSAGE_CHANNELS = ["CREATORS_HUB_CHANNEL"] as const;
 type LegibleRedisMessageChannel = typeof MESSAGE_CHANNELS[number];
 
-type LegibleRedisMessageType = "nft_purchase_reward";
+type LegibleRedisMessageType = "nft_purchase_reward" | "nft_reward_revoke";
 
 type LegibleRedisMessage<T = any> = {
   type: LiteralUnion<LegibleRedisMessageType, string>;

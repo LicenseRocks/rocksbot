@@ -79,7 +79,7 @@ export class Bot {
                 roleId
               )} role on the ${MessageFormat.code(
                 guild.name
-              )}. Aborted reward role assign process.`,
+              )}. Aborted reward role ${MessageFormat.bold("assign")} process.`,
               "warning"
             );
             return;
@@ -93,7 +93,9 @@ export class Bot {
             logsManager.log(
               `Could not find member (${MessageFormat.user(
                 destinationUserId
-              )}) that would receive reward on the ${MessageFormat.code(
+              )}) that would ${MessageFormat.bold(
+                "receive reward"
+              )} on the ${MessageFormat.code(
                 guild.name
               )}. Aborted reward role assign process.`,
               "warning"
@@ -105,18 +107,88 @@ export class Bot {
             await member.roles.add(role);
 
             await logsManager.log(
-              `Successfully assigned ${MessageFormat.role(
-                roleId
-              )} to ${MessageFormat.user(
+              `Successfully ${MessageFormat.bold(
+                "assigned"
+              )} ${MessageFormat.role(roleId)} to ${MessageFormat.user(
                 destinationUserId
               )} on ${MessageFormat.code(guild.name)}`,
               "success"
             );
           } catch (error) {
             await logsManager.log(
-              `Could not assign ${MessageFormat.role(
+              `Could not ${MessageFormat.bold("assign")} ${MessageFormat.role(
                 roleId
               )} reward role to ${MessageFormat.user(
+                destinationUserId
+              )} on the ${MessageFormat.code(guild.name)}.`,
+              "error"
+            );
+
+            await logsManager.log(
+              `Stack trace for error above.\n${MessageFormat.codeMultiline(
+                JSON.stringify(error, null, 2),
+                "json"
+              )}`,
+              "error"
+            );
+          }
+        } else if (type === "nft_reward_revoke") {
+          const { guildId, roleId, destinationUserId } = payload;
+
+          //  TODO: Make it not possible to be undefined, maybe handle guild delete and send it to CreatorsHub via webhook?
+          const guild = await this.client.guilds.fetch(guildId);
+          const logsManager = new ChannelLogs(guild);
+
+          const [role, roleError] = await retrieveFaulty<Role>(
+            guild.roles.fetch(roleId)
+          );
+
+          if (isNil(role) || roleError) {
+            await logsManager.log(
+              `Could not find reward ${MessageFormat.code(
+                roleId
+              )} role on the ${MessageFormat.code(
+                guild.name
+              )}. Aborted reward role ${MessageFormat.bold("revoke")} process.`,
+              "warning"
+            );
+            return;
+          }
+
+          const [member, memberError] = await retrieveFaulty<GuildMember>(
+            guild.members.fetch(destinationUserId)
+          );
+
+          if (isNil(member) || memberError) {
+            logsManager.log(
+              `Could not find member (${MessageFormat.user(
+                destinationUserId
+              )}) that would have reward role ${MessageFormat.bold(
+                "revoked"
+              )} ${MessageFormat.code(
+                guild.name
+              )}. Aborted reward role ${MessageFormat.bold("revoke")} process.`,
+              "warning"
+            );
+            return;
+          }
+
+          try {
+            await member.roles.remove(role);
+
+            await logsManager.log(
+              `Successfully ${MessageFormat.bold(
+                "revoked"
+              )} ${MessageFormat.role(roleId)} from ${MessageFormat.user(
+                destinationUserId
+              )} on ${MessageFormat.code(guild.name)}`,
+              "success"
+            );
+          } catch (error) {
+            await logsManager.log(
+              `Could not ${MessageFormat.bold("revoke")} ${MessageFormat.role(
+                roleId
+              )} reward role from ${MessageFormat.user(
                 destinationUserId
               )} on the ${MessageFormat.code(guild.name)}.`,
               "error"
