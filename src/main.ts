@@ -24,7 +24,7 @@ async function bootstrap(): Promise<void> {
   const bot = Resolver.resolve<Bot>(Bot);
   const commandRegistry = new CommandRegistry()
     .add(Resolver.resolve<InfoCommandStrategy>(InfoCommandStrategy))
-    .add(new VerifyCommandStrategy())
+    .add(Resolver.resolve<VerifyCommandStrategy>(VerifyCommandStrategy))
     .add(new RefreshCommandStrategy());
 
   if (EnvVars.MODE === "development") {

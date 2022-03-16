@@ -1,13 +1,22 @@
 import axios from "axios";
-import { CommandInteraction, MessageEmbed } from "discord.js";
+import {
+  CommandInteraction,
+  MessageEmbed,
+  Client,
+  Permissions,
+} from "discord.js";
 import { SlashCommandBuilder } from "@discordjs/builders";
 import isURL from "validator/lib/isURL";
 
 import { CommandStrategy } from "@command/command.strategy";
 import { MessageFormat } from "@infrastructure/helpers/message-format";
 import { ChannelLogs } from "@tools/channel-logs/channel-logs-manager";
+import { Injectable } from "@infrastructure/dependency-injection/injectable";
 
+@Injectable()
 export class VerifyCommandStrategy implements CommandStrategy {
+  constructor(private readonly client: Client) {}
+
   metadata = new SlashCommandBuilder()
     .setName("verify")
     .setDescription("Verifies & connect this server with speficic CreatorsHub")
@@ -72,6 +81,10 @@ export class VerifyCommandStrategy implements CommandStrategy {
             guildName: guild.name,
             guildAvatar: guild.iconURL(),
             roles: roles.map(({ id, name }) => ({ id, name })),
+            inviteUrl: this.client.generateInvite({
+              scopes: ["applications.commands", "bot"],
+              permissions: [Permissions.FLAGS.ADMINISTRATOR],
+            }),
           },
         },
         headers: {
