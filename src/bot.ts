@@ -109,7 +109,8 @@ export class Bot {
                 roleId
               )} to ${MessageFormat.user(
                 destinationUserId
-              )} on ${MessageFormat.code(guild.name)}`
+              )} on ${MessageFormat.code(guild.name)}`,
+              "success"
             );
           } catch (error) {
             await logsManager.log(

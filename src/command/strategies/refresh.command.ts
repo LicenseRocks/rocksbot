@@ -5,6 +5,7 @@ import isURL from "validator/lib/isURL";
 
 import { CommandStrategy } from "@command/command.strategy";
 import { MessageFormat } from "@infrastructure/helpers/message-format";
+import { ChannelLogs } from "@tools/channel-logs/channel-logs-manager";
 
 export class RefreshCommandStrategy implements CommandStrategy {
   metadata = new SlashCommandBuilder()
@@ -41,6 +42,8 @@ export class RefreshCommandStrategy implements CommandStrategy {
       return;
     }
 
+    const logsManager = new ChannelLogs(guild);
+
     await interaction.deferReply({ ephemeral: true });
 
     const roles = await guild.roles.fetch();
@@ -57,9 +60,9 @@ export class RefreshCommandStrategy implements CommandStrategy {
             guildAvatar: guild.iconURL(),
             roles: roles.map(({ id, name }) => ({ id, name })),
           },
-          headers: {
-            secret: providedSecret,
-          },
+        },
+        headers: {
+          secret: providedSecret,
         },
       });
 
@@ -67,9 +70,11 @@ export class RefreshCommandStrategy implements CommandStrategy {
         embeds: [
           new MessageEmbed()
             .setColor(MessageFormat.color.neutralGray)
-            .setDescription("Successfully refreshed server info"),
+            .setDescription("Successfully refreshed server info."),
         ],
       });
+
+      await logsManager.log("Successfully refreshed server info.", "success");
     } catch (error) {
       await interaction.editReply({
         embeds: [

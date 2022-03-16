@@ -3,6 +3,7 @@ export class MessageFormat {
     errorRed: 0xfc427b,
     neutralGray: 0x2f3136,
     warningYellow: 0xeab543,
+    successGreen: 0x32ff7e
   });
 
   public static user(id: string): string {

@@ -5,6 +5,7 @@ import isURL from "validator/lib/isURL";
 
 import { CommandStrategy } from "@command/command.strategy";
 import { MessageFormat } from "@infrastructure/helpers/message-format";
+import { ChannelLogs } from "@tools/channel-logs/channel-logs-manager";
 
 export class VerifyCommandStrategy implements CommandStrategy {
   metadata = new SlashCommandBuilder()
@@ -39,6 +40,8 @@ export class VerifyCommandStrategy implements CommandStrategy {
       });
       return;
     }
+
+    const logsManager = new ChannelLogs(guild);
 
     await interaction.deferReply({ ephemeral: true });
 
@@ -83,6 +86,8 @@ export class VerifyCommandStrategy implements CommandStrategy {
             .setDescription("Successfully verified this guild."),
         ],
       });
+
+      await logsManager.log("Successfully verified this guild.", "success");
     } catch (error) {
       await interaction.editReply({
         embeds: [
