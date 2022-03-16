@@ -33,7 +33,7 @@ export class ChannelLogs {
   private channels: Collection<Snowflake, NonThreadGuildBasedChannel> = null;
 
   public async log(message: string, type: ChannelLogType = "info") {
-    const logsChannel = this.getLogsChannel();
+    const logsChannel = await this.getLogsChannel();
 
     if (isNil(logsChannel) || !logsChannel.isText()) {
       console.warn(
@@ -55,7 +55,19 @@ export class ChannelLogs {
     });
   }
 
-  private getLogsChannel() {
+  private async getLogsChannel() {
+    const isChannelListFetched = !isNil(this.channels);
+
+    if (!isChannelListFetched) {
+      const channels = await this.guild.channels.fetch();
+      this.channels = channels;
+    }
+
+    console.log(
+      `isNotNil: ${isChannelListFetched}, got ${this.channels.size} channels.`
+    );
+    console.log(this.channels.map(({ id, name }) => ({ id, name })));
+
     return this.channels.find((channel) => channel.name === "rocksbot-logs");
   }
 }
