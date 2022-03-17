@@ -1,5 +1,5 @@
 import axios from "axios";
-import { CommandInteraction, MessageEmbed } from "discord.js";
+import { CommandInteraction, MessageEmbed, Permissions } from "discord.js";
 import { SlashCommandBuilder } from "@discordjs/builders";
 import isURL from "validator/lib/isURL";
 
@@ -23,6 +23,8 @@ export class RefreshCommandStrategy implements CommandStrategy {
         .setDescription("Please provide creators hub secret.")
         .setRequired(true)
     );
+
+  requiredPermissions = [Permissions.FLAGS.ADMINISTRATOR];
 
   async execute(interaction: CommandInteraction): Promise<any> {
     const { guild, options } = interaction;

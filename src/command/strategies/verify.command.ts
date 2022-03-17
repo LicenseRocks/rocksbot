@@ -33,6 +33,8 @@ export class VerifyCommandStrategy implements CommandStrategy {
         .setRequired(true)
     );
 
+  requiredPermissions = [Permissions.FLAGS.ADMINISTRATOR];
+
   async execute(interaction: CommandInteraction): Promise<any> {
     const { guild, options } = interaction;
     const [providedUrl, providedSecret] = [
