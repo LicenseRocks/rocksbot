@@ -22,6 +22,7 @@ import EventRegistry from "@event/event.registry";
 
 async function bootstrap(): Promise<void> {
   const bot = Resolver.resolve<Bot>(Bot);
+
   const commandRegistry = new CommandRegistry()
     .add(Resolver.resolve<InfoCommandStrategy>(InfoCommandStrategy))
     .add(Resolver.resolve<VerifyCommandStrategy>(VerifyCommandStrategy))
@@ -37,7 +38,7 @@ async function bootstrap(): Promise<void> {
 
   const eventRegistry = new EventRegistry()
     .add(new InteractionCreateEventStrategy(commandRegistry.view()))
-    .add(new GuildCreateEventStrategy())
+    .add(Resolver.resolve<GuildCreateEventStrategy>(GuildCreateEventStrategy))
     .add(Resolver.resolve<ReadyEventStrategy>(ReadyEventStrategy));
 
   bot.addEventRegistry(eventRegistry);
