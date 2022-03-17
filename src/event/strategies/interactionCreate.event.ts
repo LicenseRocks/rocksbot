@@ -21,9 +21,11 @@ export class InteractionCreateEventStrategy implements EventStrategy {
         execute,
       } = commandStrategy;
 
-      if (!isNil(requiredPermissions)) {
-        for (const requiredPermission of requiredPermissions) {
-          if (!interaction.memberPermissions.has(requiredPermission)) {
+      const executeScoped = execute.bind(commandStrategy);
+
+      if (interaction.commandName === name) {
+        if (!isNil(requiredPermissions)) {
+          if (!interaction.memberPermissions.any(requiredPermissions)) {
             await interaction.reply({
               content:
                 "Oops! It seems that you have insufficient permissions to execute this command",
@@ -32,12 +34,8 @@ export class InteractionCreateEventStrategy implements EventStrategy {
             return;
           }
         }
-      }
 
-      const executeScoped = execute.bind(commandStrategy);
-
-      if (interaction.commandName === name) {
-        executeScoped(interaction);
+        await executeScoped(interaction);
       }
     }
   }
