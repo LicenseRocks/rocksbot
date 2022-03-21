@@ -60,7 +60,9 @@ export class RefreshCommandStrategy implements CommandStrategy {
             guildId: guild.id,
             guildName: guild.name,
             guildAvatar: guild.iconURL(),
-            roles: roles.map(({ id, name }) => ({ id, name })),
+            roles: roles
+              .filter(({ name }) => name !== "@everyone")
+              .map(({ id, name }) => ({ id, name })),
           },
         },
         headers: {
