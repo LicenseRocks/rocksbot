@@ -73,13 +73,22 @@ export class RefreshCommandStrategy implements CommandStrategy {
       await interaction.editReply({
         embeds: [
           new MessageEmbed()
-            .setColor(MessageFormat.color.neutralGray)
+            .setColor(MessageFormat.color.successGreen)
             .setDescription("Successfully refreshed server info."),
         ],
       });
 
       await logsManager.log("Successfully refreshed server info.", "success");
     } catch (error) {
+      if (error.status === 400) {
+        await interaction.editReply({
+          embeds: [
+            new MessageEmbed()
+              .setColor(MessageFormat.color.errorRed)
+              .setDescription("Could not refresh this server info."),
+          ],
+        });
+      }
       await interaction.editReply({
         embeds: [
           new MessageEmbed()
