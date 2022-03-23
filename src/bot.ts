@@ -77,9 +77,9 @@ export class Bot {
             await logsManager.log(
               `Could not find reward ${MessageFormat.code(
                 roleId
-              )} role on the ${MessageFormat.code(
-                guild.name
-              )}. Aborted reward role ${MessageFormat.bold("assign")} process.`,
+              )} role. Aborted reward role ${MessageFormat.bold(
+                "assign"
+              )} process.`,
               "warning"
             );
             return;
@@ -95,8 +95,6 @@ export class Bot {
                 destinationUserId
               )}) that would ${MessageFormat.bold(
                 "receive reward"
-              )} on the ${MessageFormat.code(
-                guild.name
               )}. Aborted reward role assign process.`,
               "warning"
             );
@@ -111,16 +109,14 @@ export class Bot {
                 "assigned"
               )} ${MessageFormat.role(roleId)} to ${MessageFormat.user(
                 destinationUserId
-              )} on ${MessageFormat.code(guild.name)}`,
+              )}`,
               "success"
             );
           } catch (error) {
             await logsManager.log(
               `Could not ${MessageFormat.bold("assign")} ${MessageFormat.role(
                 roleId
-              )} reward role to ${MessageFormat.user(
-                destinationUserId
-              )} on the ${MessageFormat.code(guild.name)}.`,
+              )} reward role to ${MessageFormat.user(destinationUserId)}.`,
               "error"
             );
 
@@ -147,9 +143,9 @@ export class Bot {
             await logsManager.log(
               `Could not find reward ${MessageFormat.code(
                 roleId
-              )} role on the ${MessageFormat.code(
-                guild.name
-              )}. Aborted reward role ${MessageFormat.bold("revoke")} process.`,
+              )} role. Aborted reward role ${MessageFormat.bold(
+                "revoke"
+              )} process.`,
               "warning"
             );
             return;
@@ -165,8 +161,6 @@ export class Bot {
                 destinationUserId
               )}) that would have reward role ${MessageFormat.bold(
                 "revoked"
-              )} ${MessageFormat.code(
-                guild.name
               )}. Aborted reward role ${MessageFormat.bold("revoke")} process.`,
               "warning"
             );
@@ -181,16 +175,14 @@ export class Bot {
                 "revoked"
               )} ${MessageFormat.role(roleId)} from ${MessageFormat.user(
                 destinationUserId
-              )} on ${MessageFormat.code(guild.name)}`,
+              )}`,
               "success"
             );
           } catch (error) {
             await logsManager.log(
               `Could not ${MessageFormat.bold("revoke")} ${MessageFormat.role(
                 roleId
-              )} reward role from ${MessageFormat.user(
-                destinationUserId
-              )} on the ${MessageFormat.code(guild.name)}.`,
+              )} reward role from ${MessageFormat.user(destinationUserId)}.`,
               "error"
             );
 
