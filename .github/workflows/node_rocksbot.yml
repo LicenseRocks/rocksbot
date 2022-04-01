@@ -147,7 +147,7 @@ jobs:
           kubectl create secret generic rocksbot-secrets-${ENV_NAME} --from-env-file=.rocksbot_secret -n $NAMESPACE --dry-run=client -o yaml | kubectl apply -f -
           
           echo "app deployment"
-          cat deployment/rocksbot.yaml | kubectl delete -f -
+          cat deployment/rocksbot.yaml | kubectl delete -f - || true
           cat deployment/rocksbot.yaml | kubectl apply -f -
 
       - name: Cleanup
