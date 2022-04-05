@@ -102,16 +102,20 @@ export class Bot {
           }
 
           try {
-            await member.roles.add(role);
-
-            await logsManager.log(
-              `Successfully ${MessageFormat.bold(
-                "assigned"
-              )} ${MessageFormat.role(roleId)} to ${MessageFormat.user(
-                destinationUserId
-              )}`,
-              "success"
-            );
+            if (!member.roles.cache.has(roleId)) {
+              await member.fetch(true);
+              if (!member.roles.cache.has(roleId)) {
+                await member.roles.add(role);
+                await logsManager.log(
+                  `Successfully ${MessageFormat.bold(
+                    "assigned"
+                  )} ${MessageFormat.role(roleId)} to ${MessageFormat.user(
+                    destinationUserId
+                  )}`,
+                  "success"
+                );
+              }
+            }
           } catch (error) {
             await logsManager.log(
               `Could not ${MessageFormat.bold("assign")} ${MessageFormat.role(
