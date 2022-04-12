@@ -10,11 +10,5 @@ export class ReadyEventStrategy implements EventStrategy {
 
   async callback(): Promise<void> {
     console.log(`Ready to work! ${this.client.user.tag}`);
-
-    this.client.user.setActivity({
-      type: "WATCHING",
-      name: "license.rocks !!!",
-      url: "https://license.rocks/",
-    });
   }
 }
