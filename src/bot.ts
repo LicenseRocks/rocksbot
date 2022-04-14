@@ -89,7 +89,19 @@ export class Bot {
             guild.members.fetch(destinationUserId)
           );
 
-          if (isNil(member) || memberError) {
+          if (isNil(member)) {
+            logsManager.log(
+              `User (${MessageFormat.user(
+                destinationUserId
+              )}) that would ${MessageFormat.bold(
+                "receive reward"
+              )} is not on this Discord server. Aborted reward role assign process.`,
+              "warning"
+            );
+            return;
+          }
+
+          if (memberError) {
             logsManager.log(
               `Could not find member (${MessageFormat.user(
                 destinationUserId
@@ -159,7 +171,19 @@ export class Bot {
             guild.members.fetch(destinationUserId)
           );
 
-          if (isNil(member) || memberError) {
+          if (isNil(member)) {
+            logsManager.log(
+              `User (${MessageFormat.user(
+                destinationUserId
+              )}) that would have reward role ${MessageFormat.bold(
+                "revoked"
+              )} is not on this Discord server. Aborted reward role ${MessageFormat.bold("revoke")} process.`,
+              "warning"
+            );
+            return;
+          }
+
+          if (memberError) {
             logsManager.log(
               `Could not find member (${MessageFormat.user(
                 destinationUserId
