@@ -58,6 +58,10 @@ jobs:
 
       - name: Create AWS & Kube Profile
         run: |
+          curl -LO https://storage.googleapis.com/kubernetes-release/release/v1.23.6/bin/linux/amd64/kubectl
+          chmod +x kubectl
+          mv ./kubectl /usr/local/bin/kubectl
+          
           mkdir -p ~/.aws
 
           cat << EoF >> ~/.aws/config
