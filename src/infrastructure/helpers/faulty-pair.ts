@@ -7,6 +7,11 @@ export async function retrieveFaulty<T>(
     const value = await promise;
     return [value as Awaited<T>, null];
   } catch (error) {
-    return [null, error];
+    return [
+      null,
+      error.constructor.name === "Object" && Object.keys(error).length === 0
+        ? error.message
+        : error,
+    ];
   }
 }

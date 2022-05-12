@@ -20,6 +20,8 @@ export type NftPurchaseRewardPayload = {
   destinationUserId: Snowflake;
 };
 
+export type NftRevokeRewardPayload = NftPurchaseRewardPayload
+
 @Injectable()
 export class LegibleRedis {
   private readonly defaultChannel: LegibleRedisMessageChannel =

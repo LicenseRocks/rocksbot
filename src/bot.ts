@@ -1,4 +1,4 @@
-import { Client, Role, GuildMember } from "discord.js";
+import { Client, Guild, Role, GuildMember } from "discord.js";
 import { REST as RestClient } from "@discordjs/rest";
 import { Routes } from "discord-api-types/v10";
 import { isNil } from "lodash";
@@ -9,6 +9,7 @@ import { Injectable } from "@infrastructure/dependency-injection/injectable";
 import {
   LegibleRedis,
   NftPurchaseRewardPayload,
+  NftRevokeRewardPayload,
 } from "@infrastructure/redis/legible-redis";
 import { MessageFormat } from "@infrastructure/helpers/message-format";
 import { retrieveFaulty } from "@infrastructure/helpers/faulty-pair";
@@ -59,14 +60,23 @@ export class Bot {
   }
 
   private async handleCommunication() {
-    await this.legibleRedis.sub<NftPurchaseRewardPayload>(
+    await this.legibleRedis.sub(
       //  TODO: Extract this to separate file
       async ({ type, payload }) => {
         if (type === "nft_purchase_reward") {
-          const { guildId, roleId, destinationUserId } = payload;
+          const { guildId, roleId, destinationUserId } =
+            payload as NftPurchaseRewardPayload;
 
           //  TODO: Make it not possible to be undefined, maybe handle guild delete and send it to CreatorsHub via webhook?
-          const guild = await this.client.guilds.fetch(guildId);
+          const [guild, guildError] = await retrieveFaulty<Guild>(
+            this.client.guilds.fetch(guildId)
+          );
+
+          if (isNil(guild) || guildError) {
+            console.error(`Could not find guild with id = ${guildId}`);
+            return;
+          }
+
           const logsManager = new ChannelLogs(guild);
 
           const [role, roleError] = await retrieveFaulty<Role>(
@@ -145,10 +155,19 @@ export class Bot {
             );
           }
         } else if (type === "nft_reward_revoke") {
-          const { guildId, roleId, destinationUserId } = payload;
+          const { guildId, roleId, destinationUserId } =
+            payload as NftRevokeRewardPayload;
 
           //  TODO: Make it not possible to be undefined, maybe handle guild delete and send it to CreatorsHub via webhook?
-          const guild = await this.client.guilds.fetch(guildId);
+          const [guild, guildError] = await retrieveFaulty<Guild>(
+            this.client.guilds.fetch(guildId)
+          );
+
+          if (isNil(guild) || guildError) {
+            console.error(`Could not find guild with id = ${guildId}`);
+            return;
+          }
+
           const logsManager = new ChannelLogs(guild);
 
           const [role, roleError] = await retrieveFaulty<Role>(
@@ -177,7 +196,9 @@ export class Bot {
                 destinationUserId
               )}) that would have reward role ${MessageFormat.bold(
                 "revoked"
-              )} is not on this Discord server. Aborted reward role ${MessageFormat.bold("revoke")} process.`,
+              )} is not on this Discord server. Aborted reward role ${MessageFormat.bold(
+                "revoke"
+              )} process.`,
               "warning"
             );
             return;

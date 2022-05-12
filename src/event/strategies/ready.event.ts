@@ -9,6 +9,12 @@ export class ReadyEventStrategy implements EventStrategy {
   name: string = "ready";
 
   async callback(): Promise<void> {
+    const invite = this.client.generateInvite({
+      scopes: ["applications.commands", "bot"],
+      permissions: ["ADMINISTRATOR"],
+    });
+
     console.log(`Ready to work! ${this.client.user.tag}`);
+    console.log(`Invite: ${invite}`);
   }
 }
