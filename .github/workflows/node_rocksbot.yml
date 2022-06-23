@@ -43,7 +43,6 @@ jobs:
             prod_1)
               echo "DCR_HOST=245763787462.dkr.ecr.eu-central-1.amazonaws.com" >> $GITHUB_ENV
               echo "DCR_PATH=rocksbot" >> $GITHUB_ENV
-              echo "AWS_PROFILE=lr_prod_1_ci" >> $GITHUB_ENV
               echo "TIMESTAMP=$(date +'%d-%m-%Y_%H-%M-%S')" >> $GITHUB_ENV
               ;;
           esac
@@ -53,7 +52,9 @@ jobs:
         run: |
           echo "AWS_ACCESS_KEY_ID=${{ secrets[format('{0}_AWS_ACCESS_KEY_ID', env.CLUSTER)] }}" >> $GITHUB_ENV
           echo "AWS_SECRET_ACCESS_KEY=${{ secrets[format('{0}_AWS_SECRET_ACCESS_KEY', env.CLUSTER)] }}" >> $GITHUB_ENV
-          echo "AWS_REGION=eu-central-1" >> $GITHUB_ENV
+          echo "AWS_REGION=${{ secrets[format('{0}_AWS_REGION', env.CLUSTER)] }}" >> $GITHUB_ENV
+          echo "AWS_PROFILE=${{ secrets[format('{0}_AWS_PROFILE', env.CLUSTER)] }}" >> $GITHUB_ENV
+          echo "AWS_ACCOUNTID=${{ secrets[format('{0}_AWS_ACCOUNTID', env.CLUSTER)] }}" >> $GITHUB_ENV
           echo "GITHUB_MESSAGE=$(git log -1 --pretty=format:'%s')" >> $GITHUB_ENV
 
       - name: Create AWS & Kube Profile
@@ -109,6 +110,7 @@ jobs:
           AWS_ACCESS_KEY_ID: ${{ env.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ env.AWS_SECRET_ACCESS_KEY }}
           AWS_REGION: ${{ env.AWS_REGION }}
+          AWS_ACCOUNTID: ${{ env.AWS_ACCOUNTID }}
           NODE_NPM: ${{ env.NODE_NPM }}
         run: |
           export DOCKER_BUILDKIT=0
@@ -120,7 +122,7 @@ jobs:
       - name: Push base containers to DCR
         id: push
         run: |
-          $(aws ecr get-login --no-include-email --region $AWS_REGION)
+          aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNTID.dkr.ecr.$AWS_REGION.amazonaws.com
           docker-compose -f deployment/docker-compose.yml push
 
       - name: Deploy (feature branch) 🚀
