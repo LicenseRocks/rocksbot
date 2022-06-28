@@ -6,16 +6,16 @@ It does not require any database _(has no any state persist mechanism)_ to work 
 
 Non-technical documentation _(for users or server admins)_ can be found [on official license.rocks docs](https://docs.license.rocks/rocksbot/)
 
-If you want to create your own bot from scratch, check out our article _"[Discord: Create Bots – How to in a few steps](https://license.rocks/discord-create-bots-how-to-in-a-few-steps)"_
+If you want to create your own bot from scratch, check out our article _"[Discord: Create Bots - How to in a few steps](https://license.rocks/discord-create-bots-how-to-in-a-few-steps)"_ 🍻
 
 ## Features & technologies used
 
 RocksBot:
 
-- 🥷 is created in TypeScript
-- talks with [Discord's API][discord-api] using brilliant [discord.js][discord-js] library
-- communicates with [Redis][redis] database using powerful & robust [ioredis][ioredis] library
-- handles HTTP stuff with help of [axios][axios] client
+- 🥷🏻 is created in TypeScript
+- 🧩 talks with [Discord's API][discord-api] using brilliant [discord.js][discord-js] library
+- 💬 communicates with [Redis][redis] database using powerful & robust [ioredis][ioredis] library
+- 🌐 handles HTTP stuff with help of [axios][axios] client
 
 ## Setting up & installation
 
