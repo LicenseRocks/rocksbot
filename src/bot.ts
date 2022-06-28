@@ -139,6 +139,8 @@ export class Bot {
               }
             }
           } catch (error) {
+            console.error(error)
+
             await logsManager.log(
               `Could not ${MessageFormat.bold("assign")} ${MessageFormat.role(
                 roleId
@@ -228,6 +230,8 @@ export class Bot {
               "success"
             );
           } catch (error) {
+            console.error(error)
+
             await logsManager.log(
               `Could not ${MessageFormat.bold("revoke")} ${MessageFormat.role(
                 roleId
