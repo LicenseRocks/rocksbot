@@ -2,7 +2,7 @@
 
 **RocksBot** is a Discord Bot that acts as an integration layer between Discord chat platform and **CreatorsHub** instances at **License.rocks GmbH**. It is primarly used for Discord campaigns and rewarding NFT owners with specific Discord roles.
 
-It does not require any database _(has no any state persist mechanism)_ to work and relies only on TCP and HTTP communication.
+It does not require any database _(has no any state persist mechanism)_ to work and relies only on [Redis][redis] and HTTP (webhook) communication.
 
 Non-technical documentation _(for users or server admins)_ can be found [on official license.rocks docs](https://docs.license.rocks/rocksbot/)
 
@@ -62,7 +62,7 @@ Bot application's commands are implemented using marvellous slash commands. When
 
 ## How does it work under the hood
 
-RocksBot's logic is uncomplicated and relies heavily on info provided via redis messages. The bot subscribes to messages on specific channel and handles them basing on payload, which looks like that:
+RocksBot's logic is straightforward and relies heavily on info provided via redis messages. The bot subscribes to messages on specific channel and handles them basing on payload, which looks like that:
 
 - NFT purchase reward example:
   ```json
